@@ -3,13 +3,16 @@
 //Constructor de la clase
 Juego::Juego() {
 
+	//Inicializa las variables básicas: juego terminado, fps y altura requerida
 	juego_terminado = false;
 	fps = 60;
 	requerimiento_altura = 50;
 
+	//Crea la ventana y establece los frames por segundo de la misma
 	ventana = new RenderWindow(VideoMode(int(VENTANA_X), int(VENTANA_Y)), NOMBRE_VENTANA);
 	ventana->setFramerateLimit(fps);
 
+	//Fija el tiempo inicial del juego
 	tiempo_inicial = 30;
 
 	//Crea un origen base para encontrar todos los sonidos en la carga
@@ -410,7 +413,7 @@ void Juego::configurarListas() {
 	// -> Piso 3: Cola
 	// -> Piso 4: Pila
 	// -> Piso 5: Cola
-	// -> Piso 6: Vacío
+	// -> Piso 6: Pila
 	//Las pilas y colas se cuentan desde el piso más bajo hasta el más alto, lo cual significa que "colas_enemigos[2]" corresponde al piso 5,
 	//y "pilas_enemigos[3]" corresponde al piso 4 - pila derecha
 	//Cada piso que contenga pilas tendrá pila izquierda y pila derecha, en ese orden
@@ -425,11 +428,12 @@ void Juego::configurarListas() {
 	float offset_x = 30.0f;
 
 	//Se crean los enemigos, uno con cada color disponible
-	Enemigo tortuga_roja("rojo");
-	Enemigo tortuga_azul("azul");
-	Enemigo tortuga_amarilla("amarillo");
-	Enemigo tortuga_verde("verde");
+	Enemigo tortuga_roja("rojo", true);
+	Enemigo tortuga_azul("azul", true);
+	Enemigo tortuga_amarilla("amarillo", true);
+	Enemigo tortuga_verde("verde", true);
 
+	//Se asignan las posiciones de los enemigos
 	tortuga_roja.establecerPosicion({ origen_derecha, 425.0f });
 	tortuga_azul.establecerPosicion({ origen_derecha + (offset_x), 425.0f});
 	tortuga_amarilla.establecerPosicion({ origen_derecha + (offset_x * 2), 425.0f });
@@ -445,7 +449,9 @@ void Juego::configurarListas() {
 
 void Juego::renderizarListasEnemigos() {
 
-	colas_enemigos[0].renderizarElementos(ventana);
+	//colas_enemigos[0].renderizarElementos(ventana);
+
+	ventana->draw(colas_enemigos->retirar().retornarSprite());
 
 }
 

@@ -30,7 +30,7 @@ public:
 
 	//Constructor
 	Enemigo();
-	Enemigo(string color);
+	Enemigo(string color, bool direccion);
 
 	//Métodos sin retorno
 	void cargarGraficos(string color);

@@ -3,35 +3,48 @@
 //Constructor A: No recibe parámetros, emplea valores por defecto en algunos casos
 Enemigo::Enemigo() {
 
+	//Los enemigos empiezan sin moverse
 	en_movimiento = false;
 
+	//Raiz del directorio de imagenes
 	string raiz = "assets/images/";
 
+	//Usa la raiz para determinar el directorio de cada textura
 	direccion_texturas[0] = raiz + "tortuga_roja.png";
 	direccion_texturas[1] = raiz + "tortuga_azul.png";
 	direccion_texturas[2] = raiz + "tortuga_amarilla.png";
 	direccion_texturas[3] = raiz + "tortuga_verde.png";
 
+	//Carga los gráficos por defecto
 	cargarGraficos("rojo");
 
+	//Asigna la posición por defecto
 	establecerPosicion({ 0.0f, 0.0f });
 
 }
 
 //Constructor B: Recibe color como parámetro
-Enemigo::Enemigo(string color) {
+Enemigo::Enemigo(string color, bool direccion) {
+	
+	//Fija la dirección en la que se moverá el enemigo cuando tenga la directiva de hacerlo
+	direccion = direccion_movimiento;
 
+	//Los enemigos empiezan sin moverse
 	en_movimiento = false;
 
+	//Raiz del directorio de imagenes
 	string raiz = "assets/images/";
 
+	//Usa la raiz para determinar el directorio de cada textura
 	direccion_texturas[0] = raiz + "tortuga_roja.png";
 	direccion_texturas[1] = raiz + "tortuga_azul.png";
 	direccion_texturas[2] = raiz + "tortuga_amarilla.png";
 	direccion_texturas[3] = raiz + "tortuga_verde.png";
 
+	//Carga los gráficos usando el color suministrado
 	cargarGraficos(color);
 
+	//Asigna la posición por defecto
 	establecerPosicion({ 0.0f, 0.0f });
 
 }
@@ -78,12 +91,17 @@ FloatRect Enemigo::retornarColisionador() {
 //Método que permite "activar" un enemigo, haciendo que comience a moverse usando el bool adicional para la dirección
 void Enemigo::cambiarMovimiento(bool estado, bool direccion) {
 
+	//Activa/Desactiva el movimiento
 	en_movimiento = estado;
+
+	//Asigna la dirección de movimiento:
+	// True = derecha
+	// False = izquierda
 	direccion_movimiento = direccion;
 
 }
 
-//Devuelve el tamaño total del sprite
+//Devuelve el tamaño total del sprite. NOTA: Función de prueba. No se ha usado
 Vector2f Enemigo::retornarDimensionesSprite() {
 
 	return {retornarColisionador().height, retornarColisionador().width};
@@ -93,8 +111,10 @@ Vector2f Enemigo::retornarDimensionesSprite() {
 //Fija la posicion del enemigo, dependiendo el vector suministrado
 void Enemigo::establecerPosicion(Vector2f ubicacion) {
 
+	//Fija la posición del sprite usando la ubicacion recibida
 	posicion = { ubicacion.x, ubicacion.y };
 
+	//Actualiza la posición del sprite
 	sprite.setPosition(ubicacion.x, ubicacion.y);
 
 }
@@ -128,6 +148,7 @@ void Enemigo::establecerColor(string color) {
 //Método que mueve al enemigo siempre y cuando este pueda moverse
 void Enemigo::actualizar() {
 
+	//Variable del movimiento horizontal
 	float movimiento = 0.0f;
 
 	//Si el enemigo está en movimiento
@@ -136,16 +157,19 @@ void Enemigo::actualizar() {
 		//Si debe moverse a la derecha
 		if (direccion_movimiento) {
 
+			//Valor asignado
 			movimiento = 5.0f;
 
 		}
 		//Si se debe mover a la izquierda
 		else {
 
+			//Valor asignado
 			movimiento = -5.0f;
 
 		}
 
+		//Ejerce el movimiento previamente determinado
 		sprite.move(movimiento, 0.0f);
 
 	}
