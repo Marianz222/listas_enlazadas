@@ -13,3 +13,15 @@ Nodo::Nodo(const Enemigo& nuevo_enemigo) {
 	siguiente_nodo = nullptr;
 
 }
+
+Enemigo* Nodo::obtenerEnemigo() {
+
+	return &enemigo_actual;
+
+}
+
+Nodo* Nodo::obtenerSiguienteNodo() {
+
+	return siguiente_nodo;
+
+}

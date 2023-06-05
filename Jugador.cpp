@@ -3,7 +3,9 @@
 //Constructor de la clase
 Jugador::Jugador(Vector2f ubicacion) {
 
-	posicion = { ubicacion.x, ubicacion.y };
+	coordenadas = ubicacion;
+
+	sprite.setPosition(coordenadas);
 
 	cargarGraficos("assets/images/personaje.png");
 
@@ -20,7 +22,7 @@ void Jugador::cargarGraficos(string direccion) {
 	Vector2f dimensiones_sprite = { sprite.getGlobalBounds().height, sprite.getGlobalBounds().width };
 	
 	//Asigna posicion, escala y origen del sprite
-	sprite.setPosition(posicion);
+	sprite.setPosition(coordenadas);
 	sprite.setScale(0.4f, 0.4f);
 	sprite.setOrigin(dimensiones_sprite.x / 2, dimensiones_sprite.y / 2);
 
@@ -51,7 +53,7 @@ FloatRect Jugador::retornarColisionador() {
 //Devuelve la posición actual del sprite
 Vector2f Jugador::retornarPosicion() {
 
-	return posicion;
+	return coordenadas;
 
 }
 
@@ -59,8 +61,9 @@ Vector2f Jugador::retornarPosicion() {
 void Jugador::mover(Vector2f movimiento) {
 
 	//Aplica las coordenadas en ambos ejes
-	posicion.x += movimiento.x;
-	posicion.y += movimiento.y;
+	coordenadas += movimiento;
+
+	sprite.move(coordenadas);
 
 }
 
@@ -68,14 +71,26 @@ void Jugador::mover(Vector2f movimiento) {
 void Jugador::mover(float x, float y) {
 
 	//Aplica las coordenadas en ambos ejes
-	posicion.x += x;
-	posicion.y += y;
+	coordenadas += { x, y };
+
+	sprite.move(coordenadas);
 
 }
 
 //Método encargado de actualizar la posición del sprite para que coincida con la variable de posición que tiene el objeto
 void Jugador::actualizarPosicion() {
 
-	sprite.setPosition(posicion);
+	sprite.setPosition(coordenadas);
+
+}
+
+void Jugador::moverAlSpawn() {
+
+	float ventana_x = 800.0f;
+	float ventana_y = 600.0f;
+
+	coordenadas = { ventana_x / 2, ventana_y - 100.0f};
+
+	sprite.setPosition(coordenadas);
 
 }

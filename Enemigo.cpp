@@ -16,7 +16,7 @@ Enemigo::Enemigo() {
 	direccion_texturas[3] = raiz + "tortuga_verde.png";
 
 	//Carga los gráficos por defecto
-	cargarGraficos("rojo");
+	cargarGraficos(0);
 
 	//Asigna la posición por defecto
 	establecerPosicion({ 0.0f, 0.0f });
@@ -24,7 +24,7 @@ Enemigo::Enemigo() {
 }
 
 //Constructor B: Recibe color como parámetro
-Enemigo::Enemigo(string color, bool direccion) {
+Enemigo::Enemigo(int color, bool direccion) {
 	
 	//Fija la dirección en la que se moverá el enemigo cuando tenga la directiva de hacerlo
 	direccion = direccion_movimiento;
@@ -50,16 +50,17 @@ Enemigo::Enemigo(string color, bool direccion) {
 }
 
 //Carga la textura y se la aplica al sprites, además de modificar los atributos del mismo
-void Enemigo::cargarGraficos(string color) {
+void Enemigo::cargarGraficos(int color) {
 
-	//La textura cargada dependerá de qué color reciba la función
-	establecerColor(color);
+	textura = new Texture;
+
+	textura->loadFromFile(direccion_texturas[color]);
 
 	//Fija la textura al sprite
-	sprite.setTexture(textura);
+	sprite.setTexture(*textura);
 
 	//Variable que contiene el tamaño del sprite en ambos ejes
-	Vector2f dimensiones_sprite = { sprite.getGlobalBounds().height, sprite.getGlobalBounds().width };
+	Vector2f dimensiones_sprite = { retornarDimensionesSprite().x, retornarDimensionesSprite().y};
 
 	//Posiciona el sprite en la ventana y cambia su origen al centro de la imagen
 	sprite.setPosition(posicion);
@@ -81,7 +82,7 @@ Sprite Enemigo::retornarSprite() {
 
 }
 
-//Devuelve la caja de colisión del jugador
+//Devuelve la caja de colisión del enemigo
 FloatRect Enemigo::retornarColisionador() {
 
 	return sprite.getGlobalBounds();
@@ -119,34 +120,8 @@ void Enemigo::establecerPosicion(Vector2f ubicacion) {
 
 }
 
-//Fija el color del enemigo, dependiendo del string pasado por parámetro
-void Enemigo::establecerColor(string color) {
-
-	//La textura cargada dependerá de qué color reciba la función
-	if (color == "rojo") {
-
-		textura.loadFromFile(direccion_texturas[0]);
-	}
-	else if (color == "azul") {
-
-		textura.loadFromFile(direccion_texturas[1]);
-
-	}
-	else if (color == "amarillo") {
-
-		textura.loadFromFile(direccion_texturas[2]);
-
-	}
-	else if (color == "verde") {
-
-		textura.loadFromFile(direccion_texturas[3]);
-
-	}
-
-}
-
 //Método que mueve al enemigo siempre y cuando este pueda moverse
-void Enemigo::actualizar() {
+void Enemigo::actualizar(Jugador& jugador, Vector2f dimensiones_ventana) {
 
 	//Variable del movimiento horizontal
 	float movimiento = 0.0f;
@@ -173,5 +148,40 @@ void Enemigo::actualizar() {
 		sprite.move(movimiento, 0.0f);
 
 	}
+	
+	//Si el enemigo en cuestión colisiona con el jugador...
+	if (hayColision(jugador)) {
+
+		//El player regresa a su punto de aparición
+		jugador.moverAlSpawn();
+
+	}
+	
+}
+
+bool Enemigo::hayColision(Jugador jugador) {
+
+	//Variables para almacenar la caja de colisión de ambos sprites
+	FloatRect colisionador_jugador = jugador.retornarColisionador();
+	FloatRect colisionador_enemigo = retornarColisionador();
+
+	if (colisionador_enemigo.intersects(colisionador_jugador)) {
+
+		return true;
+	}
+
+	return false;
+
+}
+
+bool Enemigo::estaMoviendose() {
+
+	return en_movimiento;
+
+}
+
+bool Enemigo::retornarDireccionMovimiento() {
+
+	return direccion_movimiento;
 
 }

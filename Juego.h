@@ -79,7 +79,7 @@ public:
 	void chequearDerrota();
 	void crearTexto();
 	void configurarListas();
-	void renderizarListasEnemigos();
+	void actualizarListas();
 
 	//Métodos con devolución de valor
 	int actualizarCronometro();

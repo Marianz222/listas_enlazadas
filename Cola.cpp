@@ -93,3 +93,54 @@ void Cola::renderizarElementos(RenderWindow*& ventana) {
     }
 
 }
+
+void Cola::actualizarElementos(Jugador& jugador, Vector2f dimensiones_ventana) {
+
+    //Toma el nodo actual
+    Nodo* nodo_actual = primer_elemento;
+
+    //Mientras el nodo actual no sea nulo, se ejecutan las directivas
+    while (nodo_actual != nullptr) {
+
+        nodo_actual->enemigo_actual.actualizar(jugador, dimensiones_ventana);
+
+        //Finalmente, se pasa al siguiente nodo para repetir el ciclo hasta que el siguiente nodo apunte a NULL, rompiendo el ciclo
+        nodo_actual = nodo_actual->siguiente_nodo;
+
+    }
+
+}
+
+Enemigo* Cola::buscarEnemigoInactivo() {
+
+    Nodo* nodo_actual = primer_elemento;
+
+    while (nodo_actual != nullptr) {
+
+        Enemigo* enemigo = nodo_actual->obtenerEnemigo();
+
+        if (!enemigo->estaMoviendose()) {
+
+            return enemigo;
+
+        }
+
+        nodo_actual = nodo_actual->obtenerSiguienteNodo();
+
+    }
+
+    return nullptr;
+
+}
+
+void Cola::activarSiguienteEnemigo() {
+
+    Enemigo* enemigo = buscarEnemigoInactivo();
+
+    if (enemigo != nullptr) {
+
+        enemigo->cambiarMovimiento(true, enemigo->retornarDireccionMovimiento());
+
+    }
+
+}

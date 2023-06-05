@@ -15,7 +15,7 @@ private:
 	//Variables comunes
 	Texture textura;
 	Sprite sprite;
-	Vector2f posicion;
+	Vector2f coordenadas;
 
 public:
 
@@ -28,6 +28,7 @@ public:
 	void mover(Vector2f movimiento);
 	void mover(float x, float y);
 	void actualizarPosicion();
+	void moverAlSpawn();
 
 	//Funciones con retorno
 	Sprite retornarSprite();

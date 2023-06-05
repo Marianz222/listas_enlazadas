@@ -2,6 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+#include "Jugador.h"
+
 //Nombres de espacios
 using namespace std;
 using namespace sf;
@@ -22,7 +24,7 @@ private:
 	bool direccion_movimiento;
 
 	//Variables de SFML
-	Texture textura;
+	Texture* textura;
 	Sprite sprite;
 	Vector2f posicion;
 
@@ -30,20 +32,22 @@ public:
 
 	//Constructor
 	Enemigo();
-	Enemigo(string color, bool direccion);
+	Enemigo(int color, bool direccion);
 
 	//Métodos sin retorno
-	void cargarGraficos(string color);
+	void cargarGraficos(int color);
 	void renderizar(RenderWindow* ventana);
 	void cambiarMovimiento(bool estado, bool direccion);
-	void actualizar();
+	void actualizar(Jugador& jugador, Vector2f dimensiones_ventana);
 	void establecerPosicion(Vector2f ubicacion);
-	void establecerColor(string color);
 
 	//Funciones con retorno
 	Sprite retornarSprite();
 	FloatRect retornarColisionador();
 	Vector2f retornarDimensionesSprite();
+	bool hayColision(Jugador jugador);
+	bool estaMoviendose();
+	bool retornarDireccionMovimiento();
 
 };
 

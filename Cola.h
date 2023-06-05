@@ -19,9 +19,12 @@ public:
 	//Métodos sin devolución de valores
 	void insertar(const Enemigo& nuevo_enemigo);
 	void renderizarElementos(RenderWindow*& ventana);
+	void actualizarElementos(Jugador& jugador, Vector2f dimensiones_ventana);
+	void activarSiguienteEnemigo();
 
 	//Métodos con devolución de valor
 	Enemigo retirar();
+	Enemigo* buscarEnemigoInactivo();
 	bool estaVacia();
 
 };

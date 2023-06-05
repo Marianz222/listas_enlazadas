@@ -79,6 +79,8 @@ void Juego::bucleJuego() {
 		//Hace sonar el tic tac del reloj
 		reproducirSonidoReloj();
 
+		actualizarListas();
+
 		//Muestra el contenido en pantalla
 		renderizar();
 
@@ -157,8 +159,6 @@ void Juego::gestionarEventos() {
 					//Reproduce el sonido: Salto
 					sonidos[0].play();
 
-					cout << jugador->retornarPosicion().y << endl;
-
 				}
 
 				//Informa por consola que se presionó la tecla
@@ -176,6 +176,9 @@ void Juego::gestionarEventos() {
 
 	//Mueve el personaje en el eje y
 	jugador->mover(0.0f, movimiento_y);
+	
+	//Actualiza la posicion del sprite en jugador
+	jugador->actualizarPosicion();
 
 }
 
@@ -209,9 +212,6 @@ void Juego::controlarTeclado(float tiempo_delta) {
 
 	//Mueve el personaje en el eje x
 	jugador->mover(movimiento_x, 0.0f);
-
-	//Tras modificarse, actualiza la posición del sprite usando la propia posición del jugador
-	jugador->actualizarPosicion();
 
 }
 
@@ -418,40 +418,77 @@ void Juego::configurarListas() {
 	//y "pilas_enemigos[3]" corresponde al piso 4 - pila derecha
 	//Cada piso que contenga pilas tendrá pila izquierda y pila derecha, en ese orden
 
-	//Fija el origen derecho al inicio de la pantalla
-	float origen_derecha = 0.0f;
+	//Variables para usar de iterador a la hora de recorrer los ciclos for
+	const int CANTIDAD_LISTAS = 3;
 
-	//Fija el origen izquierdo a la anchura de la pantalla, restando el tamaño del sprite multiplicado por la cantidad de enemigos que tiene la lista
+	//Fija el origen derecho e izquierdo para el posicionamiento de los enemigos
+	float origen_derecha = 15.0f;
 	float origen_izquierda = VENTANA_X - (25.0f * 4);
 
 	//El offset es la anchura del sprite enemigo
 	float offset_x = 30.0f;
 
-	//Se crean los enemigos, uno con cada color disponible
-	Enemigo tortuga_roja("rojo", true);
-	Enemigo tortuga_azul("azul", true);
-	Enemigo tortuga_amarilla("amarillo", true);
-	Enemigo tortuga_verde("verde", true);
+	//Establece la altura de cada set de listas
+	float altura_colas[3] = {440.0f, 290.0f, 140.0f};
+	float altura_pilas[3] = {0.0f, 0.0f, 0.0f};
 
-	//Se asignan las posiciones de los enemigos
-	tortuga_roja.establecerPosicion({ origen_derecha, 425.0f });
-	tortuga_azul.establecerPosicion({ origen_derecha + (offset_x), 425.0f});
-	tortuga_amarilla.establecerPosicion({ origen_derecha + (offset_x * 2), 425.0f });
-	tortuga_verde.establecerPosicion({ origen_derecha + (offset_x * 3), 425.0f });
+	//Bucle de configuracion de COLAS
+	for (int i = 0; i < CANTIDAD_LISTAS; i++) {
 
-	//Se añaden los 4 enemigos como nodos a la cola #1
-	colas_enemigos[0].insertar(tortuga_roja);
-	colas_enemigos[0].insertar(tortuga_azul);
-	colas_enemigos[0].insertar(tortuga_amarilla);
-	colas_enemigos[0].insertar(tortuga_verde);
+		//Se crean los enemigos, uno con cada color disponible
+		Enemigo tortuga_roja(0, true);
+		Enemigo tortuga_azul(1, true);
+		Enemigo tortuga_amarilla(2, true);
+		Enemigo tortuga_verde(3, true);
+
+		//Se asignan las posiciones de los enemigos
+		tortuga_verde.establecerPosicion({ origen_derecha, altura_colas[i] });
+		tortuga_amarilla.establecerPosicion({ origen_derecha + (offset_x), altura_colas[i] });
+		tortuga_azul.establecerPosicion({ origen_derecha + (offset_x * 2), altura_colas[i] });
+		tortuga_roja.establecerPosicion({ origen_derecha + (offset_x * 3), altura_colas[i] });
+
+		//Se añaden los 4 enemigos como nodos a la cola #1
+		colas_enemigos[i].insertar(tortuga_roja);
+		colas_enemigos[i].insertar(tortuga_azul);
+		colas_enemigos[i].insertar(tortuga_amarilla);
+		colas_enemigos[i].insertar(tortuga_verde);
+
+	}
+
+	//Bucle de configuracion de PILAS
+
+	for (int i = 0; i < CANTIDAD_LISTAS; i++) {
+
+		//Placeholder
+
+	}
 	
 }
 
-void Juego::renderizarListasEnemigos() {
+void Juego::actualizarListas() {
 
-	//colas_enemigos[0].renderizarElementos(ventana);
+	Vector2f dimensiones_ventana = { VENTANA_X, VENTANA_Y };
 
-	ventana->draw(colas_enemigos->retirar().retornarSprite());
+	bool enemigo_movilizado = false; // Variable para controlar que solo un enemigo se mueva a la vez
+
+	// Recorre las colas de enemigos
+	for (int i = 0; i < 3; i++) {
+
+		// Busca un enemigo inactivo en la cola
+		Enemigo* enemigo_inactivo = colas_enemigos[i].buscarEnemigoInactivo();
+
+		// Activa el movimiento del primer enemigo inactivo encontrado
+		if (enemigo_inactivo && !enemigo_movilizado) {
+
+			enemigo_inactivo->cambiarMovimiento(true, true); // Cambia el estado de movimiento y dirección
+			enemigo_movilizado = true; // Marca que un enemigo ha sido movido
+
+		}
+
+		// Actualiza los elementos de la cola
+		colas_enemigos[i].actualizarElementos(*jugador, dimensiones_ventana);
+
+	}
 
 }
 
@@ -459,14 +496,26 @@ void Juego::renderizar() {
 
 	//Limpia la pantalla eliminando todo lo dibujado previamente
 	ventana->clear();
-	
+
 	//Dibuja el fondo
 	ventana->draw(sprite_fondo);
-	
+
 	//Dibuja la puerta
 	salida->renderizar(ventana);
 
-	renderizarListasEnemigos();
+	//Bucle para dibujar todas las colas
+	for (int i = 0; i < 3; i++) {
+
+		colas_enemigos[i].renderizarElementos(ventana);
+
+	}
+
+	//Bucle para dibujar todas las pilas
+	for (int i = 0; i < 3; i++) {
+
+		//Placeholder
+
+	}
 
 	//Dibuja el jugador
 	jugador->renderizar(ventana);

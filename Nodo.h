@@ -15,6 +15,8 @@ public:
 
 	//Constructor
 	Nodo(const Enemigo& nuevo_enemigo);
+	Enemigo* obtenerEnemigo();
+	Nodo* obtenerSiguienteNodo();
 
 	//Declaración de clases amigas
 	friend class Pila;
