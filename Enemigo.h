@@ -26,13 +26,13 @@ private:
 	//Variables de SFML
 	Texture* textura;
 	Sprite sprite;
-	Vector2f posicion;
+	Vector2f coordenadas;
 
 public:
 
 	//Constructor
 	Enemigo();
-	Enemigo(int color, bool direccion);
+	Enemigo(int color, bool direccion, bool activo);
 
 	//Métodos sin retorno
 	void cargarGraficos(int color);
@@ -40,14 +40,15 @@ public:
 	void cambiarMovimiento(bool estado, bool direccion);
 	void actualizar(Jugador& jugador, Vector2f dimensiones_ventana);
 	void establecerPosicion(Vector2f ubicacion);
+	void mover(Vector2f desplazamiento);
 
 	//Funciones con retorno
 	Sprite retornarSprite();
 	FloatRect retornarColisionador();
 	Vector2f retornarDimensionesSprite();
+	Vector2f retornarPosicion();
 	bool hayColision(Jugador jugador);
 	bool estaMoviendose();
 	bool retornarDireccionMovimiento();
 
 };
-

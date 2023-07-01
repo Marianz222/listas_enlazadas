@@ -6,6 +6,10 @@ Enemigo::Enemigo() {
 	//Los enemigos empiezan sin moverse
 	en_movimiento = false;
 
+	direccion_movimiento = true;
+
+	coordenadas = { 0.0f, 0.0f };
+
 	//Raiz del directorio de imagenes
 	string raiz = "assets/images/";
 
@@ -19,18 +23,20 @@ Enemigo::Enemigo() {
 	cargarGraficos(0);
 
 	//Asigna la posición por defecto
-	establecerPosicion({ 0.0f, 0.0f });
+	establecerPosicion(coordenadas);
 
 }
 
 //Constructor B: Recibe color como parámetro
-Enemigo::Enemigo(int color, bool direccion) {
+Enemigo::Enemigo(int color, bool direccion, bool activo) {
 	
 	//Fija la dirección en la que se moverá el enemigo cuando tenga la directiva de hacerlo
 	direccion = direccion_movimiento;
 
 	//Los enemigos empiezan sin moverse
-	en_movimiento = false;
+	en_movimiento = activo;
+
+	coordenadas = { 0.0f, 0.0f };
 
 	//Raiz del directorio de imagenes
 	string raiz = "assets/images/";
@@ -45,7 +51,7 @@ Enemigo::Enemigo(int color, bool direccion) {
 	cargarGraficos(color);
 
 	//Asigna la posición por defecto
-	establecerPosicion({ 0.0f, 0.0f });
+	establecerPosicion(coordenadas);
 
 }
 
@@ -63,7 +69,6 @@ void Enemigo::cargarGraficos(int color) {
 	Vector2f dimensiones_sprite = { retornarDimensionesSprite().x, retornarDimensionesSprite().y};
 
 	//Posiciona el sprite en la ventana y cambia su origen al centro de la imagen
-	sprite.setPosition(posicion);
 	sprite.setOrigin(dimensiones_sprite.x / 2, dimensiones_sprite.y / 2);
 
 }
@@ -113,10 +118,19 @@ Vector2f Enemigo::retornarDimensionesSprite() {
 void Enemigo::establecerPosicion(Vector2f ubicacion) {
 
 	//Fija la posición del sprite usando la ubicacion recibida
-	posicion = { ubicacion.x, ubicacion.y };
+	coordenadas = ubicacion;
 
 	//Actualiza la posición del sprite
 	sprite.setPosition(ubicacion.x, ubicacion.y);
+
+}
+
+//Mueve el sprite por el desplazamiento pasado por parámetro
+void Enemigo::mover(Vector2f desplazamiento) {
+
+	coordenadas += desplazamiento;
+
+	establecerPosicion(coordenadas);
 
 }
 
@@ -144,8 +158,10 @@ void Enemigo::actualizar(Jugador& jugador, Vector2f dimensiones_ventana) {
 
 		}
 
+		coordenadas.x += movimiento;
+
 		//Ejerce el movimiento previamente determinado
-		sprite.move(movimiento, 0.0f);
+		establecerPosicion(coordenadas);
 
 	}
 	
@@ -159,29 +175,42 @@ void Enemigo::actualizar(Jugador& jugador, Vector2f dimensiones_ventana) {
 	
 }
 
+//Revisa si el sprite del enemigo ha colisionado con el jugador pasado por parámetro
 bool Enemigo::hayColision(Jugador jugador) {
 
 	//Variables para almacenar la caja de colisión de ambos sprites
 	FloatRect colisionador_jugador = jugador.retornarColisionador();
 	FloatRect colisionador_enemigo = retornarColisionador();
 
+	//Si hay colisión
 	if (colisionador_enemigo.intersects(colisionador_jugador)) {
 
+		//Retorna verdadero
 		return true;
 	}
 
+	//Retorna falso, que significa que no hubo colisiones
 	return false;
 
 }
 
+//Método para revisar si el enemigo está en movimiento o no
 bool Enemigo::estaMoviendose() {
 
 	return en_movimiento;
 
 }
 
+//Devuelve la dirección del movimiento (true = derecha, false = izquierda)
 bool Enemigo::retornarDireccionMovimiento() {
 
 	return direccion_movimiento;
+
+}
+
+//Devuelve la posición del enemigo
+Vector2f Enemigo::retornarPosicion() {
+
+	return coordenadas;
 
 }

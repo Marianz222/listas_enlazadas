@@ -1,5 +1,6 @@
 #pragma once
 #include "Enemigo.h"
+#include <iostream>
 
 class Nodo
 
@@ -23,4 +24,3 @@ public:
 	friend class Cola;
 
 };
-

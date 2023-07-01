@@ -17,14 +17,13 @@ public:
 	Cola();
 
 	//Métodos sin devolución de valores
-	void insertar(const Enemigo& nuevo_enemigo);
+	void insertar(const Enemigo& nuevo_enemigo, Vector2f nueva_posicion);
 	void renderizarElementos(RenderWindow*& ventana);
 	void actualizarElementos(Jugador& jugador, Vector2f dimensiones_ventana);
-	void activarSiguienteEnemigo();
+	void desplazarEnemigos();
 
 	//Métodos con devolución de valor
-	Enemigo retirar();
-	Enemigo* buscarEnemigoInactivo();
+	Enemigo* retirar();
 	bool estaVacia();
 
 };

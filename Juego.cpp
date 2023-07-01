@@ -37,15 +37,18 @@ Juego::Juego() {
 	jugador = new Jugador({ VENTANA_X / 2, VENTANA_Y - 100 });
 	registrarEnConsola("[INFO/DEBUG]: Jugador creado y posicionado", true);
 
-	cout << jugador->retornarPosicion().y << endl;
-
 	//Crea la puerta y envia un registro a consola
 	salida = new Puerta({ VENTANA_X / 2, 35.0f });
 	registrarEnConsola("[INFO/DEBUG]: Puerta creada y posicionada", true);
 
+	//Crea una nueva instancia del gestor de eventos
 	gestor_eventos = new Event;
 
+	//Llama a la configuracion de las listas
 	configurarListas();
+
+	//Variable para determinar si los sonidos se reproducen o no
+	silenciar_juego = false;
 
 }
 
@@ -55,6 +58,8 @@ void Juego::bucleJuego() {
 	//Variables de control de tiempo
 	Clock reloj;
 	float tiempo_delta;
+
+	static int extracciones_pilas = 0;
 
 	while (ventana->isOpen()) {
 
@@ -79,7 +84,11 @@ void Juego::bucleJuego() {
 		//Hace sonar el tic tac del reloj
 		reproducirSonidoReloj();
 
-		actualizarListas();
+		//Actualiza las listas
+		actualizarColas();
+
+		//Actualiza las pilas
+		actualizarPilas();
 
 		//Muestra el contenido en pantalla
 		renderizar();
@@ -156,8 +165,13 @@ void Juego::gestionarEventos() {
 					//El jugador sube
 					movimiento_y = -75.0f;
 
-					//Reproduce el sonido: Salto
-					sonidos[0].play();
+					//Si el juego no está silenciado...
+					if (!silenciar_juego) {
+
+						//Reproduce el sonido: Salto
+						sonidos[0].play();
+
+					}
 
 				}
 
@@ -165,6 +179,27 @@ void Juego::gestionarEventos() {
 				registrarEnConsola("[INFO/DEBUG]: Tecla Presionada: Espacio", true);
 
 				break;
+
+			case Keyboard::F2: //Tecla Presionada: F2
+
+				//Intercambia entre con sonido y sin sonido
+				silenciar_juego = !silenciar_juego;
+
+				if (silenciar_juego) {
+
+					//Informa por consola que se presionó la tecla
+					registrarEnConsola("[INFO/NORMAL]: Sonido desactivado", true);
+
+				}
+				else {
+
+					//Informa por consola que se presionó la tecla
+					registrarEnConsola("[INFO/NORMAL]: Sonido activado", true);
+
+				}
+
+				//Informa por consola que se presionó la tecla
+				registrarEnConsola("[INFO/DEBUG]: Tecla Presionada: F2", true);
 
 			}
 
@@ -176,7 +211,7 @@ void Juego::gestionarEventos() {
 
 	//Mueve el personaje en el eje y
 	jugador->mover(0.0f, movimiento_y);
-	
+
 	//Actualiza la posicion del sprite en jugador
 	jugador->actualizarPosicion();
 
@@ -197,14 +232,14 @@ void Juego::controlarTeclado(float tiempo_delta) {
 	float movimiento_x = 0.0f;
 
 	//Revisa que no se esté intentando mover por fuera de la ventana
-	if (Keyboard::isKeyPressed(Keyboard::D) && jugador->retornarPosicion().x <= VENTANA_X + 105) {
+	if (Keyboard::isKeyPressed(Keyboard::D) && jugador->retornarPosicion().x <= VENTANA_X - 30) {
 
 		movimiento_x = 5.0f;
 
 	}
 
 	//Revisa que no se esté intentando mover por fuera de la ventana
-	if (Keyboard::isKeyPressed(Keyboard::A) && jugador->retornarPosicion().x >= 0) {
+	if (Keyboard::isKeyPressed(Keyboard::A) && jugador->retornarPosicion().x >= 30) {
 
 		movimiento_x = -5.0f;
 
@@ -259,8 +294,13 @@ void Juego::actualizarTexto(int segundos) {
 			//Informa por consola que se acabo el tiempo
 			registrarEnConsola("[INFO/NORMAL]: Termino el tiempo. Perdiste!", true);
 
-			//Reproduce el sonido: Perder
-			sonidos[2].play();
+			//Si el juego tiene sonido activado...
+			if (!silenciar_juego) {
+
+				//Reproduce el sonido: Perder
+				sonidos[2].play();
+
+			}
 
 		}
 
@@ -341,8 +381,13 @@ void Juego::chequearColisionesExtras() {
 			//Cambia el bool para evitar llenar la consola con el mensaje
 			mensaje_registrado = true;
 
-			//Reproduce el sonido: Ganar
-			sonidos[1].play();
+			//Si el sonido está activado...
+			if (!silenciar_juego) {
+
+				//Reproduce el sonido: Ganar
+				sonidos[1].play();
+
+			}
 
 		}
 
@@ -354,7 +399,7 @@ void Juego::chequearColisionesExtras() {
 void Juego::chequearDerrota() {
 
 	//Revisa si el tiempo es 0
-	if (tiempo_inicial = 0) {
+	if (tiempo_inicial == 0) {
 
 		//Cambia la bandera a false
 		juego_terminado = true;
@@ -385,6 +430,12 @@ void Juego::registrarEnConsola(string mensaje, bool terminar_linea) {
 
 //Método que toma el tiempo transcurrido para así reproducir el sonido de tic tac de reloj. El intervalo se mide en segundos
 void Juego::reproducirSonidoReloj() {
+
+	if (silenciar_juego) {
+
+		return;
+
+	}
 
 	//Creamos variables estáticas para conservar sus valores en cada llamada a la función
 	static Clock reloj;
@@ -418,80 +469,279 @@ void Juego::configurarListas() {
 	//y "pilas_enemigos[3]" corresponde al piso 4 - pila derecha
 	//Cada piso que contenga pilas tendrá pila izquierda y pila derecha, en ese orden
 
+	//Se recorre el arreglo de enemigos retirados...
+	for (int i = 0; i < 3; i++) {
+
+		//Se le asigna NULL a cada enemigo retirado, por defecto todos comienzan siendo nulos
+		enemigos_retirados_cola[i] = nullptr;
+		enemigos_retirados_pila[i] = nullptr;
+
+	}
+
 	//Variables para usar de iterador a la hora de recorrer los ciclos for
 	const int CANTIDAD_LISTAS = 3;
 
 	//Fija el origen derecho e izquierdo para el posicionamiento de los enemigos
-	float origen_derecha = 15.0f;
-	float origen_izquierda = VENTANA_X - (25.0f * 4);
+	float origen_izquierda = 15.0f;
+	float origen_derecha = VENTANA_X - 20.0f;
 
 	//El offset es la anchura del sprite enemigo
 	float offset_x = 30.0f;
-
-	//Establece la altura de cada set de listas
-	float altura_colas[3] = {440.0f, 290.0f, 140.0f};
-	float altura_pilas[3] = {0.0f, 0.0f, 0.0f};
 
 	//Bucle de configuracion de COLAS
 	for (int i = 0; i < CANTIDAD_LISTAS; i++) {
 
 		//Se crean los enemigos, uno con cada color disponible
-		Enemigo tortuga_roja(0, true);
-		Enemigo tortuga_azul(1, true);
-		Enemigo tortuga_amarilla(2, true);
-		Enemigo tortuga_verde(3, true);
+		Enemigo tortuga_roja(0, true, false);
+		Enemigo tortuga_azul(1, true, false);
+		Enemigo tortuga_amarilla(2, true, false);
+		Enemigo tortuga_verde(3, true, false);
 
-		//Se asignan las posiciones de los enemigos
-		tortuga_verde.establecerPosicion({ origen_derecha, altura_colas[i] });
-		tortuga_amarilla.establecerPosicion({ origen_derecha + (offset_x), altura_colas[i] });
-		tortuga_azul.establecerPosicion({ origen_derecha + (offset_x * 2), altura_colas[i] });
-		tortuga_roja.establecerPosicion({ origen_derecha + (offset_x * 3), altura_colas[i] });
-
-		//Se añaden los 4 enemigos como nodos a la cola #1
-		colas_enemigos[i].insertar(tortuga_roja);
-		colas_enemigos[i].insertar(tortuga_azul);
-		colas_enemigos[i].insertar(tortuga_amarilla);
-		colas_enemigos[i].insertar(tortuga_verde);
+		//Se añaden los 4 enemigos como nodos a las 3 colas
+		colas_enemigos[i].insertar(tortuga_roja, { origen_izquierda + (offset_x * 3), altura_colas[i] });
+		colas_enemigos[i].insertar(tortuga_azul, { origen_izquierda + (offset_x * 2), altura_colas[i] });
+		colas_enemigos[i].insertar(tortuga_amarilla, { origen_izquierda + (offset_x), altura_colas[i] });
+		colas_enemigos[i].insertar(tortuga_verde, { origen_izquierda, altura_colas[i] });
 
 	}
 
-	//Bucle de configuracion de PILAS
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
+	//Bucle de configuracion de PILAS llenas, las vacías no se configuran ya que solo recibirán elementos nuevos
 	for (int i = 0; i < CANTIDAD_LISTAS; i++) {
 
-		//Placeholder
+		//Se crean los enemigos
+		Enemigo tortuga_verde(0, true, false);
+		Enemigo tortuga_amarilla(1, true, false);
+		Enemigo tortuga_azul(2, true, false);
+		Enemigo tortuga_roja(3, true, false);
+
+		//Se añaden los 4 enemigos como nodos a las 3 pilas derechas (las izquierdas se instancian vacías para recibir elementos luego)
+		pilas_enemigos_derecha[i].insertar(tortuga_verde, {origen_derecha, altura_pilas[i]});
+		pilas_enemigos_derecha[i].insertar(tortuga_amarilla, { origen_derecha - (offset_x), altura_pilas[i] });
+		pilas_enemigos_derecha[i].insertar(tortuga_azul, { origen_derecha - (offset_x * 2), altura_pilas[i] });
+		pilas_enemigos_derecha[i].insertar(tortuga_roja, { origen_derecha - (offset_x * 3), altura_pilas[i] });
 
 	}
-	
+
 }
 
-void Juego::actualizarListas() {
+//Método que actualiza las colas para retirar un elemento y reinsertarlo en la misma pila tras completar su viaje
+void Juego::actualizarColas() {
 
+	//Si el juego ya terminó, no se actualizarán las listas
+	if (juego_terminado) {
+
+		return;
+
+	}
+
+	//Almacena el tamaño de la ventana
 	Vector2f dimensiones_ventana = { VENTANA_X, VENTANA_Y };
 
-	bool enemigo_movilizado = false; // Variable para controlar que solo un enemigo se mueva a la vez
-
-	// Recorre las colas de enemigos
+	//Recorre el arreglo de las 3 colas, iterando a su vez en el arreglo de elementos retirados que corresponde a las colas
 	for (int i = 0; i < 3; i++) {
 
-		// Busca un enemigo inactivo en la cola
-		Enemigo* enemigo_inactivo = colas_enemigos[i].buscarEnemigoInactivo();
+		//Si no hay ningún enemigo retirado...
+		if (enemigos_retirados_cola[i] == nullptr) {
 
-		// Activa el movimiento del primer enemigo inactivo encontrado
-		if (enemigo_inactivo && !enemigo_movilizado) {
+			//Se retira el primer enemigo de la cola
+			enemigos_retirados_cola[i] = colas_enemigos[i].retirar();
 
-			enemigo_inactivo->cambiarMovimiento(true, true); // Cambia el estado de movimiento y dirección
-			enemigo_movilizado = true; // Marca que un enemigo ha sido movido
+			//Registra en consola cuando una de las colas ejecuta una extracción
+			//registrarEnConsola("[INFO/DEBUG]: Evento - Extraccion en cola", true);
+
+		}
+		//Si en cambio hay un enemigo ya retirado...
+		else {
+
+			//Se activa el movimiento del enemigo retirado
+			enemigos_retirados_cola[i]->cambiarMovimiento(true, true);
+			enemigos_retirados_cola[i]->actualizar(*jugador, dimensiones_ventana);
+
+			//Revisa si el enemigo en desplazamiento ha alcanzado su objetivo (salir de la ventana)...
+			if (enemigos_retirados_cola[i]->retornarPosicion().x > dimensiones_ventana.x + 30) {
+
+				//Mueve los enemigos restantes todos un espacio a la derecha, para dar lugar a la re-inserción del primer enemigo
+				colas_enemigos[i].desplazarEnemigos();
+
+				//Re-inserta el enemigo retirado, quedando así al final de la cola. Para esto se usan las coordenadas de origen + la altura de
+				//la plataforma donde se reinsertará. Tras esto el enemigo retirado se convierte en nulo
+				enemigos_retirados_cola[i]->cambiarMovimiento(false, true);
+				colas_enemigos[i].insertar(*enemigos_retirados_cola[i], { 15.0f, altura_colas[i] });
+				enemigos_retirados_cola[i] = nullptr;
+
+				//Registra en consola cuando una de las colas ejecuta una re-inserción
+				//registrarEnConsola("[INFO/DEBUG]: Evento - Insercion en cola", true);
+
+			}
 
 		}
 
-		// Actualiza los elementos de la cola
+		//Recorre todas las colas de enemigos, llamando al método actualizar el cual recorrerá las listas usando un while para llamar a "actualizar"
+		//dentro del enemigo en cada uno de los nodos
 		colas_enemigos[i].actualizarElementos(*jugador, dimensiones_ventana);
 
 	}
 
 }
 
+//Método que actualiza las colas, haciendo que todos los elementos abandonen uno a uno la pila A
+//para luego desde la B repetir el proceso a la inversa
+void Juego::actualizarPilas() {
+
+	//Si el juego ya terminó, no se actualizarán las listas
+	if (juego_terminado) {
+
+		return;
+
+	}
+
+	//Constante de la cantidad de pilas llenas
+	const int CANTIDAD_PILAS = 3;
+
+	//Variables estáticas para controlar el offset de posición, el contador de enemigos extraídos y la dirección de extracción
+	static float offset[3] = { 0.0f, 0.0f, 0.0f };
+	static int contador = 0;
+	static bool direccion_actual = false;
+
+	//Almacena el tamaño de la ventana
+	Vector2f dimensiones_ventana = { VENTANA_X, VENTANA_Y };
+
+	//Si la dirección es izquierda...
+	if (!direccion_actual) {
+
+		//Recorre el arreglo de las 3 pilas derechas, iterando a su vez en el arreglo de elementos retirados
+		for (int i = 0; i < 3; i++) {
+
+			//Si no hay ningún enemigo retirado...
+			if (enemigos_retirados_pila[i] == nullptr) {
+
+				//Se retira el primer enemigo de la pila
+				enemigos_retirados_pila[i] = pilas_enemigos_derecha[i].retirar();
+
+				//Registra en consola cuando una de las colas ejecuta una extracción
+				//registrarEnConsola("[INFO/DEBUG]: Evento - Extraccion en pila derecha", true);
+
+			}
+			//Si en cambio hay un enemigo ya retirado...
+			else {
+
+				//Se activa el movimiento del enemigo retirado
+				enemigos_retirados_pila[i]->cambiarMovimiento(true, false);
+				enemigos_retirados_pila[i]->actualizar(*jugador, dimensiones_ventana);
+
+				//Revisa si el enemigo en desplazamiento ha alcanzado su objetivo (tocar el borde o colisionar con otro enemigo)
+				if (enemigos_retirados_pila[i]->retornarPosicion().x == 0 + offset[i]) {
+
+					//Inserta el enemigo retirado de la pila A a la pila B
+					enemigos_retirados_pila[i]->cambiarMovimiento(false, false);
+
+					//El enemigo extraído se inserta en la pila izquierda correspondiente, tomando como referencia el inicio de ventana + el offset
+					pilas_enemigos_izquierda[i].insertar(*enemigos_retirados_pila[i], { 15.0f + offset[i], altura_pilas[i]});
+
+					//Añade el tamaño de las tortugas (30) al offset
+					offset[i] += 30.0f;
+
+					//Incrementa el contador de extracciones en 1
+					contador++;
+
+					//El enemigo reitrado pasa a ser nulo
+					enemigos_retirados_pila[i] = nullptr;
+
+					//Registra en consola cuando una de las colas ejecuta una re-inserción
+					//registrarEnConsola("[INFO/DEBUG]: Evento - Insercion en pila izquierda", true);
+
+				}
+
+			}
+
+			//Recorre todas las colas de enemigos, llamando al método actualizar el cual recorrerá las listas usando un while para llamar a "actualizar"
+			//dentro del enemigo en cada uno de los nodos
+			pilas_enemigos_derecha[i].actualizarElementos(*jugador, dimensiones_ventana);
+
+		}
+
+	} //Sino si la dirección es derecha...
+	else if (direccion_actual) {
+
+		//Recorre el arreglo de las 3 pilas derechas, iterando a su vez en el arreglo de elementos retirados
+		for (int i = 0; i < 3; i++) {
+
+			//Si no hay ningún enemigo retirado...
+			if (enemigos_retirados_pila[i] == nullptr) {
+
+				//Se retira el primer enemigo de la pila
+				enemigos_retirados_pila[i] = pilas_enemigos_izquierda[i].retirar();
+
+				//Registra en consola cuando una de las colas ejecuta una extracción
+				//registrarEnConsola("[INFO/DEBUG]: Evento - Extraccion en pila izquierda", true);
+
+			}
+			//Si en cambio hay un enemigo ya retirado...
+			else {
+
+				//Se activa el movimiento del enemigo retirado
+				enemigos_retirados_pila[i]->cambiarMovimiento(true, true);
+				enemigos_retirados_pila[i]->actualizar(*jugador, dimensiones_ventana);
+
+				//Revisa si el enemigo en desplazamiento ha alcanzado su objetivo (tocar el borde o colisionar con otro enemigo)
+				if (enemigos_retirados_pila[i]->retornarPosicion().x == dimensiones_ventana.x - 15.0f - offset[i]) {
+
+					//Detiene el movimiento del enemigo
+					enemigos_retirados_pila[i]->cambiarMovimiento(false, true);
+
+					//El enemigo extraído se inserta en la correspondiente pila derecha, usando como referencia el tamaño de la ventana menos el offset
+				    pilas_enemigos_derecha[i].insertar(*enemigos_retirados_pila[i], { dimensiones_ventana.x - 15.0f - offset[i], altura_pilas[i]});
+
+					//Añade el tamaño de los enemigos (30) al offset
+					offset[i] += 30.0f;
+
+					//Incrementa el contador de extracciones en 1
+					contador++;
+
+					//El enemigo reitrado pasa a ser nulo
+					enemigos_retirados_pila[i] = nullptr;
+
+					//Registra en consola cuando una de las colas ejecuta una re-inserción
+					//registrarEnConsola("[INFO/DEBUG]: Evento - Insercion en pila derecha", true);
+
+				}
+
+			}
+
+			//Recorre todas las colas de enemigos, llamando al método actualizar el cual recorrerá las listas usando un while para llamar a "actualizar"
+			//dentro del enemigo en cada uno de los nodos
+			pilas_enemigos_izquierda[i].actualizarElementos(*jugador, dimensiones_ventana);
+
+		}
+
+	}
+
+	//Si el contador es igual a X. Esto se calcula usando la cantidad de enemigos a extraer por pila (4 en este caso)
+	//y multiplicandolo por la cantidad de pilas totales, ya que el contador es uno solo al hacer un ingreso entran 3 enemigos y no uno solo
+	//Esto da como resultado 12, número el cual se obtiene si todas las pilas enviaron sus 4 elementos
+	if (contador == 4 * CANTIDAD_PILAS) {
+
+		//Intercambia la dirección
+		direccion_actual = !direccion_actual;
+
+		//Reinicia el contador
+		contador = 0;
+
+		//Itera sobre el arreglo de offsets de posicion para reiniciarlos
+		for (int i = 0; i < 3; i++) {
+
+			offset[i] = 0.0f;
+
+		}
+
+	}
+
+
+}
+
+//Método que se encarga de dibujar todos los elementos gráficos en la pantalla, llamando a clear -> draw -> display
 void Juego::renderizar() {
 
 	//Limpia la pantalla eliminando todo lo dibujado previamente
@@ -502,18 +752,41 @@ void Juego::renderizar() {
 
 	//Dibuja la puerta
 	salida->renderizar(ventana);
-
-	//Bucle para dibujar todas las colas
+	
+	//Bucle para dibujar todas las listas enlazadas
 	for (int i = 0; i < 3; i++) {
 
+		//Obtiene y carga todos los elementos de cada cola, para ser dibujados
 		colas_enemigos[i].renderizarElementos(ventana);
 
 	}
 
-	//Bucle para dibujar todas las pilas
 	for (int i = 0; i < 3; i++) {
 
-		//Placeholder
+		pilas_enemigos_izquierda[i].renderizarElementos(ventana);
+
+		pilas_enemigos_derecha[i].renderizarElementos(ventana);
+
+	}
+
+	//Bucle para dibujar todos los enemigos temporales
+	for (int i = 0; i < 3; i++) {
+
+		//Si hay algun enemigo retirado de las colas
+		if (enemigos_retirados_cola[i] != NULL) {
+
+			//Da la directiva para que sea dibujado
+			enemigos_retirados_cola[i]->renderizar(ventana);
+
+		}
+
+		//Si hay algun enemigo retirado de las pilas
+		if (enemigos_retirados_pila[i] != NULL) {
+
+			//Da la directiva para que sea dibujado
+			enemigos_retirados_pila[i]->renderizar(ventana);
+
+		}
 
 	}
 

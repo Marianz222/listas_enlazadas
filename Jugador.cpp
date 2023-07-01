@@ -84,13 +84,17 @@ void Jugador::actualizarPosicion() {
 
 }
 
+//Método encargado de posicionar al jugador en su lugar de aparición
 void Jugador::moverAlSpawn() {
 
+	//Tamaño de la ventana
 	float ventana_x = 800.0f;
 	float ventana_y = 600.0f;
 
+	//Nuevas coordenadas
 	coordenadas = { ventana_x / 2, ventana_y - 100.0f};
 
+	//Mueve al jugador
 	sprite.setPosition(coordenadas);
 
 }

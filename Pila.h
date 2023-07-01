@@ -16,8 +16,11 @@ public:
 	Pila();
 
 	//Métodos sin devolución de valores
-	void retirar();
-	void insertar(const Enemigo& nuevo_enemigo);
+	Enemigo* retirar();
+	void insertar(const Enemigo& nuevo_enemigo, Vector2f nueva_posicion);
+	void actualizarElementos(Jugador& jugador, Vector2f dimensiones_ventana);
+	void renderizarElementos(RenderWindow*& ventana);
+	Enemigo* retornarPrimerEnemigo();
 
 	//Métodos con devolución de valor
 	bool estaVacia();

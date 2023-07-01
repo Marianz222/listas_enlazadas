@@ -10,10 +10,11 @@ Cola::Cola() {
 }
 
 //Inserta un nuevo nodo a la cola, recibe como parámetro el dato a insertar (en este caso, un enemigo pasado por referencia)
-void Cola::insertar(const Enemigo& nuevo_enemigo) {
+void Cola::insertar(const Enemigo& nuevo_enemigo, Vector2f nueva_posicion) {
 
     //Crea el nuevo nodo a insertar, con el valor recibido
     Nodo* nodo_nuevo = new Nodo(nuevo_enemigo);
+    nodo_nuevo->obtenerEnemigo()->establecerPosicion(nueva_posicion);
 
     //Si la cola está vacía...
     if (estaVacia()) {
@@ -34,33 +35,20 @@ void Cola::insertar(const Enemigo& nuevo_enemigo) {
 }
 
 //Obtiene el próximo nodo de la cola y lo elimina
-Enemigo Cola::retirar() {
+Enemigo* Cola::retirar() {
 
     //Si la cola está vacía...
     if (estaVacia()) {
 
-        //Se devuelve un enemigo nulo
-        return Enemigo();
+        //Se devuelve un puntero nulo
+        return nullptr;
 
     }
 
-    //Variables de enemigo y nodo temporal
-    Enemigo enemigo = primer_elemento->enemigo_actual;
-    Nodo* nodo_temporal = primer_elemento;
-
-    //El primer elemento pasa al segundo lugar, siendo borrado en el proceso
+    Nodo* nodoRetirar = primer_elemento;
     primer_elemento = primer_elemento->siguiente_nodo;
-    delete nodo_temporal;
-
-    if (estaVacia()) {
-
-        //Si el elemento extraído fue el último en la cola, el último lugar ahora es nulo
-        ultimo_elemento = nullptr;
-
-    }
-
-    //Se retorna el enemigo retirado
-    return enemigo;
+    Enemigo* e = nodoRetirar->obtenerEnemigo();
+    return e;
 
 }
 
@@ -87,59 +75,40 @@ void Cola::renderizarElementos(RenderWindow*& ventana) {
         //Se pasa la directiva para dibujar el sprite obtenido
         ventana->draw(sprite);
 
-        //Finalmente, se pasa al siguiente nodo para repetir el ciclo hasta que el siguiente nodo apunte a NULL, rompiendo el ciclo
+        //Finalmente, se pasa al siguiente nodo para repetir el ciclo hasta que el siguiente nodo apunte a NULL, rompiendo el mismo
         nodo_actual = nodo_actual->siguiente_nodo;
 
     }
 
 }
 
+//Método que recorre toda la lista enlazada comenzando por el inicio, y utilizando el puntero a siguiente nodo para saltar de nodo en nodo y leer
+//los datos del mismo. Dentro del bucle, se llama a la función actualizar de cada enemigo, para que estos respondan a colisiones y demás
 void Cola::actualizarElementos(Jugador& jugador, Vector2f dimensiones_ventana) {
+    
+    Nodo* nodo_iterador = primer_elemento;
 
-    //Toma el nodo actual
-    Nodo* nodo_actual = primer_elemento;
+    while (nodo_iterador != nullptr)
+    {
 
-    //Mientras el nodo actual no sea nulo, se ejecutan las directivas
-    while (nodo_actual != nullptr) {
-
-        nodo_actual->enemigo_actual.actualizar(jugador, dimensiones_ventana);
-
-        //Finalmente, se pasa al siguiente nodo para repetir el ciclo hasta que el siguiente nodo apunte a NULL, rompiendo el ciclo
-        nodo_actual = nodo_actual->siguiente_nodo;
+        nodo_iterador->obtenerEnemigo()->actualizar(jugador, dimensiones_ventana);
+        nodo_iterador = nodo_iterador->siguiente_nodo;
 
     }
 
 }
 
-Enemigo* Cola::buscarEnemigoInactivo() {
+//Método el cual desplaza todos los elementos restantes en la cola hacia la derecha
+//Este metodo es con el que tengo dificultades, ya que no estoy seguro si se está ejecutando correctamente o si está bien implementado
+void Cola::desplazarEnemigos() {
 
-    Nodo* nodo_actual = primer_elemento;
+    Nodo* nodo_iterador = primer_elemento;
 
-    while (nodo_actual != nullptr) {
+    while (nodo_iterador != nullptr)
+    {
 
-        Enemigo* enemigo = nodo_actual->obtenerEnemigo();
-
-        if (!enemigo->estaMoviendose()) {
-
-            return enemigo;
-
-        }
-
-        nodo_actual = nodo_actual->obtenerSiguienteNodo();
-
-    }
-
-    return nullptr;
-
-}
-
-void Cola::activarSiguienteEnemigo() {
-
-    Enemigo* enemigo = buscarEnemigoInactivo();
-
-    if (enemigo != nullptr) {
-
-        enemigo->cambiarMovimiento(true, enemigo->retornarDireccionMovimiento());
+        nodo_iterador->obtenerEnemigo()->mover({ 30.0f, 0.0f });
+        nodo_iterador = nodo_iterador->siguiente_nodo;
 
     }
 

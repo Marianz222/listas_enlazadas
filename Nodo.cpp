@@ -1,5 +1,4 @@
 #include "Nodo.h"
-#include <iostream>
 
 using namespace std;
 
@@ -14,12 +13,14 @@ Nodo::Nodo(const Enemigo& nuevo_enemigo) {
 
 }
 
+//Método usado para obtener el enemigo dentro del nodo seleccionado
 Enemigo* Nodo::obtenerEnemigo() {
 
 	return &enemigo_actual;
 
 }
 
+//Método similar al anterior, pero en su lugar obtiene la dirección al siguiente nodo
 Nodo* Nodo::obtenerSiguienteNodo() {
 
 	return siguiente_nodo;
